@@ -1793,11 +1793,11 @@
       const utilityStats = unlockedStats.filter(s => !s.id.startsWith('f') && parseInt(s.id.replace('s','')) > 7);
       const cookingStats = unlockedStats.filter(s => s.id.startsWith('f'));
 
-      // 💡 공통 레이아웃 스타일 정의
+       // 💡 공통 레이아웃 스타일 정의
       const gridBoxStyle = 'background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;';
       const innerGridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px;';
       const badgeStyle = 'display: block; width: 100%; text-align: center; box-sizing: border-box; padding: 5px 8px; font-size: 12px; border-radius: 6px; border: 1px solid;';
-      const labelBadgeStyle = 'display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px; border-radius: 6px; border: 1px solid; background: white; transition: all 0.2s;';
+      const labelBadgeStyle = 'display: flex; align-items: center; justify-content: flex-start; gap: 6px; cursor: pointer; width: 100%; box-sizing: border-box; padding: 5px 12px; font-size: 11px; border-radius: 6px; border: 1px solid; background: white; transition: all 0.2s;';
 
       // 1. 계산기 체크박스 업데이트 부분 (그리드 레이아웃 적용)
       const chkContainer = document.getElementById('ga-stat-checkboxes');
