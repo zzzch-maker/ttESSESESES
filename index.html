@@ -3173,27 +3173,14 @@
     }
 
     const goldStats = [
-      // 💡 [수치 변경 가이드] 기획 데이터가 나오면 아래 4가지 속성을 수정하세요.
-      // - baseCost: 1레벨업을 위한 기본 비용
-      // - growthRate: 레벨당 비용 증가율 (1.15 = 15% 증가, 1.05 = 5% 증가)
-      // - baseStat: 0레벨일 때의 기본 스탯 수치
-      // - statPerLv: 1레벨 오를 때마다 고정적으로 증가하는 스탯 수치
-      { id: 'atk', name: '공격력', icon: '⚔️', type: 'atk', category: 'atk', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000, 
-        baseCost: 10.0, growthRate: 1.15, baseStat: 1500, statPerLv: 100 },
-      { id: 'hp', name: '생명력', icon: '❤️', type: 'def', category: 'def', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
-        baseCost: 10.0, growthRate: 1.15, baseStat: 1500, statPerLv: 100 },
-      { id: 'def', name: '방어력', icon: '🛡️', type: 'def', category: 'def', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
-        baseCost: 10.0, growthRate: 1.15, baseStat: 500, statPerLv: 50 },
-      { id: 'pen', name: '관통력', icon: '🏹', type: 'atk', category: 'atk', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
-        baseCost: 20.0, growthRate: 1.20, baseStat: 100, statPerLv: 20 },
-      { id: 'critRate', name: '치명타 확률', icon: '🎯', type: 'crit', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 1000,
-        baseCost: 50.0, growthRate: 1.10, baseStat: 0, statPerLv: 0.1 },
-      { id: 'critDmg', name: '치명타 데미지', icon: '💥', type: 'crit', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 40000,
-        baseCost: 30.0, growthRate: 1.12, baseStat: 100, statPerLv: 0.5 },
-      { id: 'ultCritRate', name: '궁극 치명타 확률', icon: '👑', type: 'ult', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 1000,
-        baseCost: 100.0, growthRate: 1.15, baseStat: 0, statPerLv: 0.1 },
-      { id: 'ultCritDmg', name: '궁극 치명타 데미지', icon: '⚡', type: 'ult', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 10000,
-        baseCost: 80.0, growthRate: 1.15, baseStat: 50, statPerLv: 0.15 }
+      { id: 'atk', name: '공격력', icon: '⚔️', type: 'atk', category: 'atk', unit: '', defaultLv: 146400, defaultTarget: 150000, maxLv: 300000 },
+      { id: 'hp', name: '생명력', icon: '❤️', type: 'def', category: 'def', unit: '', defaultLv: 100000, defaultTarget: 110000, maxLv: 300000 },
+      { id: 'def', name: '방어력', icon: '🛡️', type: 'def', category: 'def', unit: '', defaultLv: 50200, defaultTarget: 60000, maxLv: 300000 },
+      { id: 'pen', name: '관통력', icon: '🏹', type: 'atk', category: 'atk', unit: '', defaultLv: 25000, defaultTarget: 30000, maxLv: 300000 },
+      { id: 'critRate', name: '치명타 확률', icon: '🎯', type: 'crit', category: 'atk', unit: '%', perLv: 0.1, defaultLv: 1000, defaultTarget: 1000, maxLv: 1000 },
+      { id: 'critDmg', name: '치명타 데미지', icon: '💥', type: 'crit', category: 'atk', unit: '%', perLv: 5200 / 19000, defaultLv: 19000, defaultTarget: 20000, maxLv: 40000 },
+      { id: 'ultCritRate', name: '궁극 치명타 확률', icon: '👑', type: 'ult', category: 'atk', unit: '%', perLv: 0.1, defaultLv: 400, defaultTarget: 500, maxLv: 1000 },
+      { id: 'ultCritDmg', name: '궁극 치명타 데미지', icon: '⚡', type: 'ult', category: 'atk', unit: '%', perLv: 0.15, defaultLv: 2000, defaultTarget: 3000, maxLv: 10000 }
     ];
 
     const levelStats = [
@@ -3274,27 +3261,17 @@
     }
 
     function getGoldStatValue(id, level) {
-      const statConfig = goldStats.find(s => s.id === id);
-      if (!statConfig) return 0;
-      
-      const baseStat = statConfig.baseStat || 0;
-      const statPerLv = statConfig.statPerLv || 1;
-      
-      // [골드 스탯 수치 변경] 기본 선형 증가치 계산
-      let totalStat = baseStat + (level * statPerLv);
-
-      // =========================================================================
-      // [골드 스탯 구간별 추가 상승값 설정] 
-      // 예: 1,000레벨 구간을 돌파할 때마다 추가 보너스 스탯을 부여하고 싶을 때 수정하세요.
-      // Math.floor(level / 1000) 은 1000레벨당 1씩 증가합니다. (1000렙=1, 2000렙=2...)
-      // =========================================================================
-      const milestoneInterval = 1000; // 💡 구간 단위 (예: 1000레벨마다)
-      const milestoneBonus = 50;      // 💡 구간 돌파 시마다 추가되는 고정 보너스 스탯량
-      
-      const milestoneCount = Math.floor(level / milestoneInterval);
-      totalStat += milestoneCount * milestoneBonus;
-
-      return totalStat;
+      if (id === 'pen') {
+        const k = Math.floor(level / 1000);
+        return 500 * k * (k + 1) + (level - k * 1000) * (k + 1);
+      } else if (id === 'atk') {
+        if (level <= 1000) return 1500 + level;
+        return 132000000 + (level - 146400) * 6500;
+      } else {
+        const statConfig = goldStats.find(s => s.id === id);
+        if (!statConfig) return 0;
+        return statConfig.perLv ? level * statConfig.perLv : level;
+      }
     }
 
     function getLevelStatValue(id, level) {
@@ -3504,41 +3481,25 @@
     }
 
     function calculateTotalRequiredGold(statConfig, curLv, targetLv) {
-      if (targetLv <= curLv || !statConfig) return 0;
-      
-      // =========================================================================
-      // [골드 스탯 골드 소모량 변경] 
-      // 기본 비용(baseCost)과 성장률(growthRate)을 기반으로 비용을 산출합니다.
-      // =========================================================================
-      const baseCost = statConfig.baseCost || 10.0;
-      const growthRate = statConfig.growthRate || 1.15;
-      
-      // =========================================================================
-      // [골드 스탯 구간별 추가 소모량(가중치) 설정]
-      // 특정 구간(예: 1000레벨 단위)마다 비용이 더 가파르게 오르도록 
-      // 구간별 추가 배율을 정의할 수 있습니다. (필요 시 아래 로직을 확장하세요)
-      // =========================================================================
-      let totalCost = 0;
-      
-      // 정밀한 구간별 누적 계산을 위해 1레벨씩 안전하게 순회하며 합산합니다.
-      // (만약 레벨 범위가 수십만 단위로 크다면 등비수열 공식을 쓰되, 
-      //  구간 경계면에서 가중치를 곱해주는 방식으로 확장할 수 있습니다.)
-      let currentCost = baseCost * Math.pow(growthRate, curLv);
-      
-      for (let l = curLv; l < targetLv; l++) {
-          let stepCost = currentCost;
-          
-          // 💡 [구간별 추가 비용 가중치 예시]
-          // 만약 10,000레벨 이상 구간에서는 비용이 1.5배 더 든다면 아래처럼 설정 가능합니다.
-          if (l >= 10000) {
-              stepCost *= 1.5; 
-          }
-          
-          totalCost += stepCost;
-          currentCost *= growthRate; // 다음 레벨로 갈 때 성장률 적용
+      if (targetLv <= curLv) return 0;
+      const C0 = 2149852.83035001;
+      const r = 2.251632525547432;
+      const rStep = Math.pow(r, 1 / 10000);
+
+      if (targetLv <= 1000) {
+        const N = targetLv - curLv;
+        return N * (curLv + 1) + (N * (N - 1)) / 2;
       }
-      
-      return totalCost;
+
+      if (curLv < 1000) {
+        const lowCost = calculateTotalRequiredGold(statConfig, curLv, 1000);
+        const highCost = calculateTotalRequiredGold(statConfig, 1000, targetLv);
+        return lowCost + highCost;
+      }
+
+      const startCost = C0 * Math.pow(r, curLv / 10000);
+      const n = targetLv - curLv;
+      return startCost * (Math.pow(rStep, n) - 1) / (rStep - 1);
     }
 
     function calcGoldStat(id) {
