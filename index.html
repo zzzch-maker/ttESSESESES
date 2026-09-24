@@ -3173,14 +3173,27 @@
     }
 
     const goldStats = [
-      { id: 'atk', name: '공격력', icon: '⚔️', type: 'atk', category: 'atk', unit: '', defaultLv: 146400, defaultTarget: 150000, maxLv: 300000 },
-      { id: 'hp', name: '생명력', icon: '❤️', type: 'def', category: 'def', unit: '', defaultLv: 100000, defaultTarget: 110000, maxLv: 300000 },
-      { id: 'def', name: '방어력', icon: '🛡️', type: 'def', category: 'def', unit: '', defaultLv: 50200, defaultTarget: 60000, maxLv: 300000 },
-      { id: 'pen', name: '관통력', icon: '🏹', type: 'atk', category: 'atk', unit: '', defaultLv: 25000, defaultTarget: 30000, maxLv: 300000 },
-      { id: 'critRate', name: '치명타 확률', icon: '🎯', type: 'crit', category: 'atk', unit: '%', perLv: 0.1, defaultLv: 1000, defaultTarget: 1000, maxLv: 1000 },
-      { id: 'critDmg', name: '치명타 데미지', icon: '💥', type: 'crit', category: 'atk', unit: '%', perLv: 5200 / 19000, defaultLv: 19000, defaultTarget: 20000, maxLv: 40000 },
-      { id: 'ultCritRate', name: '궁극 치명타 확률', icon: '👑', type: 'ult', category: 'atk', unit: '%', perLv: 0.1, defaultLv: 400, defaultTarget: 500, maxLv: 1000 },
-      { id: 'ultCritDmg', name: '궁극 치명타 데미지', icon: '⚡', type: 'ult', category: 'atk', unit: '%', perLv: 0.15, defaultLv: 2000, defaultTarget: 3000, maxLv: 10000 }
+      // 💡 [수치 변경 가이드] 기획 데이터가 나오면 아래 4가지 속성을 수정하세요.
+      // - baseCost: 1레벨업을 위한 기본 비용
+      // - growthRate: 레벨당 비용 증가율 (1.15 = 15% 증가, 1.05 = 5% 증가)
+      // - baseStat: 0레벨일 때의 기본 스탯 수치
+      // - statPerLv: 1레벨 오를 때마다 고정적으로 증가하는 스탯 수치
+      { id: 'atk', name: '공격력', icon: '⚔️', type: 'atk', category: 'atk', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000, 
+        baseCost: 10.0, growthRate: 1.15, baseStat: 1500, statPerLv: 100 },
+      { id: 'hp', name: '생명력', icon: '❤️', type: 'def', category: 'def', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
+        baseCost: 10.0, growthRate: 1.15, baseStat: 1500, statPerLv: 100 },
+      { id: 'def', name: '방어력', icon: '🛡️', type: 'def', category: 'def', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
+        baseCost: 10.0, growthRate: 1.15, baseStat: 500, statPerLv: 50 },
+      { id: 'pen', name: '관통력', icon: '🏹', type: 'atk', category: 'atk', unit: '', defaultLv: 1, defaultTarget: 10, maxLv: 300000,
+        baseCost: 20.0, growthRate: 1.20, baseStat: 100, statPerLv: 20 },
+      { id: 'critRate', name: '치명타 확률', icon: '🎯', type: 'crit', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 1000,
+        baseCost: 50.0, growthRate: 1.10, baseStat: 0, statPerLv: 0.1 },
+      { id: 'critDmg', name: '치명타 데미지', icon: '💥', type: 'crit', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 40000,
+        baseCost: 30.0, growthRate: 1.12, baseStat: 100, statPerLv: 0.5 },
+      { id: 'ultCritRate', name: '궁극 치명타 확률', icon: '👑', type: 'ult', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 1000,
+        baseCost: 100.0, growthRate: 1.15, baseStat: 0, statPerLv: 0.1 },
+      { id: 'ultCritDmg', name: '궁극 치명타 데미지', icon: '⚡', type: 'ult', category: 'atk', unit: '%', defaultLv: 1, defaultTarget: 10, maxLv: 10000,
+        baseCost: 80.0, growthRate: 1.15, baseStat: 50, statPerLv: 0.15 }
     ];
 
     const levelStats = [
@@ -3261,17 +3274,13 @@
     }
 
     function getGoldStatValue(id, level) {
-      if (id === 'pen') {
-        const k = Math.floor(level / 1000);
-        return 500 * k * (k + 1) + (level - k * 1000) * (k + 1);
-      } else if (id === 'atk') {
-        if (level <= 1000) return 1500 + level;
-        return 132000000 + (level - 146400) * 6500;
-      } else {
-        const statConfig = goldStats.find(s => s.id === id);
-        if (!statConfig) return 0;
-        return statConfig.perLv ? level * statConfig.perLv : level;
-      }
+      const statConfig = goldStats.find(s => s.id === id);
+      if (!statConfig) return 0;
+      
+      // [선형 스탯 산출식] 기본 스탯 + (현재 레벨 * 레벨당 증가량)
+      const baseStat = statConfig.baseStat || 0;
+      const statPerLv = statConfig.statPerLv || 1;
+      return baseStat + (level * statPerLv);
     }
 
     function getLevelStatValue(id, level) {
@@ -3481,25 +3490,25 @@
     }
 
     function calculateTotalRequiredGold(statConfig, curLv, targetLv) {
-      if (targetLv <= curLv) return 0;
-      const C0 = 2149852.83035001;
-      const r = 2.251632525547432;
-      const rStep = Math.pow(r, 1 / 10000);
+      if (targetLv <= curLv || !statConfig) return 0;
+      
+      const baseCost = statConfig.baseCost || 10.0;
+      const growthRate = statConfig.growthRate || 1.15;
+      const n = targetLv - curLv; // 올려야 할 레벨 횟수
 
-      if (targetLv <= 1000) {
-        const N = targetLv - curLv;
-        return N * (curLv + 1) + (N * (N - 1)) / 2;
+      // 비용 증가율이 1.0 (비용 고정)일 경우의 안전 예외 처리
+      if (growthRate === 1.0) {
+        const fixedCost = baseCost * Math.pow(1.0, curLv); // 어차피 baseCost와 동일
+        return fixedCost * n;
       }
 
-      if (curLv < 1000) {
-        const lowCost = calculateTotalRequiredGold(statConfig, curLv, 1000);
-        const highCost = calculateTotalRequiredGold(statConfig, 1000, targetLv);
-        return lowCost + highCost;
-      }
-
-      const startCost = C0 * Math.pow(r, curLv / 10000);
-      const n = targetLv - curLv;
-      return startCost * (Math.pow(rStep, n) - 1) / (rStep - 1);
+      // [지수 성장(등비수열) 산출식] O(1)의 성능으로 대량 레벨업 비용을 즉시 산출합니다.
+      // 시작 비용(a) = baseCost * (growthRate ^ curLv)
+      // 총 비용 = a * (growthRate^n - 1) / (growthRate - 1)
+      const startCost = baseCost * Math.pow(growthRate, curLv);
+      const totalCost = startCost * (Math.pow(growthRate, n) - 1) / (growthRate - 1);
+      
+      return totalCost;
     }
 
     function calcGoldStat(id) {
