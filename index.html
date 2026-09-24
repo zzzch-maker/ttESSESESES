@@ -3277,10 +3277,24 @@
       const statConfig = goldStats.find(s => s.id === id);
       if (!statConfig) return 0;
       
-      // [선형 스탯 산출식] 기본 스탯 + (현재 레벨 * 레벨당 증가량)
       const baseStat = statConfig.baseStat || 0;
       const statPerLv = statConfig.statPerLv || 1;
-      return baseStat + (level * statPerLv);
+      
+      // [골드 스탯 수치 변경] 기본 선형 증가치 계산
+      let totalStat = baseStat + (level * statPerLv);
+
+      // =========================================================================
+      // [골드 스탯 구간별 추가 상승값 설정] 
+      // 예: 1,000레벨 구간을 돌파할 때마다 추가 보너스 스탯을 부여하고 싶을 때 수정하세요.
+      // Math.floor(level / 1000) 은 1000레벨당 1씩 증가합니다. (1000렙=1, 2000렙=2...)
+      // =========================================================================
+      const milestoneInterval = 1000; // 💡 구간 단위 (예: 1000레벨마다)
+      const milestoneBonus = 50;      // 💡 구간 돌파 시마다 추가되는 고정 보너스 스탯량
+      
+      const milestoneCount = Math.floor(level / milestoneInterval);
+      totalStat += milestoneCount * milestoneBonus;
+
+      return totalStat;
     }
 
     function getLevelStatValue(id, level) {
@@ -3492,21 +3506,37 @@
     function calculateTotalRequiredGold(statConfig, curLv, targetLv) {
       if (targetLv <= curLv || !statConfig) return 0;
       
+      // =========================================================================
+      // [골드 스탯 골드 소모량 변경] 
+      // 기본 비용(baseCost)과 성장률(growthRate)을 기반으로 비용을 산출합니다.
+      // =========================================================================
       const baseCost = statConfig.baseCost || 10.0;
       const growthRate = statConfig.growthRate || 1.15;
-      const n = targetLv - curLv; // 올려야 할 레벨 횟수
-
-      // 비용 증가율이 1.0 (비용 고정)일 경우의 안전 예외 처리
-      if (growthRate === 1.0) {
-        const fixedCost = baseCost * Math.pow(1.0, curLv); // 어차피 baseCost와 동일
-        return fixedCost * n;
+      
+      // =========================================================================
+      // [골드 스탯 구간별 추가 소모량(가중치) 설정]
+      // 특정 구간(예: 1000레벨 단위)마다 비용이 더 가파르게 오르도록 
+      // 구간별 추가 배율을 정의할 수 있습니다. (필요 시 아래 로직을 확장하세요)
+      // =========================================================================
+      let totalCost = 0;
+      
+      // 정밀한 구간별 누적 계산을 위해 1레벨씩 안전하게 순회하며 합산합니다.
+      // (만약 레벨 범위가 수십만 단위로 크다면 등비수열 공식을 쓰되, 
+      //  구간 경계면에서 가중치를 곱해주는 방식으로 확장할 수 있습니다.)
+      let currentCost = baseCost * Math.pow(growthRate, curLv);
+      
+      for (let l = curLv; l < targetLv; l++) {
+          let stepCost = currentCost;
+          
+          // 💡 [구간별 추가 비용 가중치 예시]
+          // 만약 10,000레벨 이상 구간에서는 비용이 1.5배 더 든다면 아래처럼 설정 가능합니다.
+          if (l >= 10000) {
+              stepCost *= 1.5; 
+          }
+          
+          totalCost += stepCost;
+          currentCost *= growthRate; // 다음 레벨로 갈 때 성장률 적용
       }
-
-      // [지수 성장(등비수열) 산출식] O(1)의 성능으로 대량 레벨업 비용을 즉시 산출합니다.
-      // 시작 비용(a) = baseCost * (growthRate ^ curLv)
-      // 총 비용 = a * (growthRate^n - 1) / (growthRate - 1)
-      const startCost = baseCost * Math.pow(growthRate, curLv);
-      const totalCost = startCost * (Math.pow(growthRate, n) - 1) / (growthRate - 1);
       
       return totalCost;
     }
