@@ -1617,13 +1617,42 @@
     
     </div>
 
+    <div id="tab-costume" class="tab-content">
+      <!-- 상단 누적 포인트 및 종합 능력치 요약 대시보드 -->
+      <div class="invest-card" style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border: none; margin-bottom: 20px;">
+        <div class="invest-title" style="color: #38bdf8; margin-bottom: 8px;">
+          👗 의상 & 장비 수집 포인트 종합 대시보드
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;">
+          <div>
+            <span style="color: #94a3b8; font-size: 12px; display: block;">총 누적 수집 포인트</span>
+            <strong style="color: #f59e0b; font-size: 22px;" id="costume-total-pts">0 P</strong>
+          </div>
+        </div>
+        <div style="border-top: 1px solid #334155; padding-top: 12px;">
+          <div style="font-size: 12px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">✨ 활성화된 누적 능력치 합계:</div>
+          <div class="item-badge-list" id="costume-total-stats-list" style="justify-content: flex-start;">
+            <span style="font-size: 11px; color: #94a3b8;">포인트를 획득하여 능력치를 활성화하세요.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 전체 선택/해제 컨트롤 -->
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 14px;">
+        <button onclick="toggleAllCostumes(true)" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer;">전체 선택</button>
+        <button onclick="toggleAllCostumes(false)" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer;">전체 해제</button>
+      </div>
+
+      <!-- 장비 및 코스튬 등급별 섹션 컨테이너 -->
+      <div id="costume-sections-container" style="display: flex; flex-direction: column; gap: 16px;"></div>
+    </div>
+
     <!-- 기타 서브탭 준비중 플레이스홀더들 -->
     <div id="tab-ability" class="tab-content"><div class="placeholder-card">🧬 어빌리티 계산기 준비 중입니다.</div></div>
     <div id="tab-cooking" class="tab-content"><div class="placeholder-card">🍳 요리 계산기 준비 중입니다.</div></div>
     <div id="tab-relic" class="tab-content"><div class="placeholder-card">🔮 유물 계산기 준비 중입니다.</div></div>
     <div id="tab-equip" class="tab-content"><div class="placeholder-card">🗡️ 장비 계산기 준비 중입니다.</div></div>
     <div id="tab-skill" class="tab-content"><div class="placeholder-card">✨ 스킬 계산기 준비 중입니다.</div></div>
-    <div id="tab-costume" class="tab-content"><div class="placeholder-card">👗 의상 계산기 준비 중입니다.</div></div>
     <div id="tab-codex" class="tab-content"><div class="placeholder-card">📖 도감 계산기 준비 중입니다.</div></div>
     <div id="tab-dragon" class="tab-content"><div class="placeholder-card">🐉 드래곤 성장 계산기 준비 중입니다.</div></div>
     <div id="tab-spirit" class="tab-content"><div class="placeholder-card">🧚 정령 계산기 준비 중입니다.</div></div>
@@ -1633,6 +1662,198 @@
   </div>
 
   <script>
+
+    // ===== 의상 & 장비 수집 데이터 정의 =====
+  const equipmentCostumeData = [
+    { grade: 'D', pts: 5, color: '#94a3b8' },
+    { grade: 'C', pts: 10, color: '#22c55e' },
+    { grade: 'B', pts: 15, color: '#3b82f6' },
+    { grade: 'A', pts: 20, color: '#a855f7' },
+    { grade: 'S', pts: 25, color: '#f59e0b' },
+    { grade: 'SS', pts: 30, color: '#ef4444' },
+    { grade: 'SSS', pts: 35, color: '#eab308' },
+    { grade: 'US', pts: 40, color: '#06b6d4' },
+    { grade: 'USS', pts: 45, color: '#ec4899' }
+  ];
+
+  const costumeSpecialData = [
+    { idPrefix: 'costume-A', name: '코스튬 A등급', pts: 80, count: 4, color: '#a855f7' },
+    { idPrefix: 'costume-SSS', name: '코스튬 SSS등급', pts: 60, count: 11, color: '#eab308' }
+  ];
+
+  const costumeParts = ['무기', '방어구', '투구'];
+  const costumeTiers = ['T4', 'T3', 'T2', 'T1'];
+
+  // 누적 포인트 보상표 데이터 (이미지 2 기준 주요 구간 반영)
+  const costumeMilestonesTable = [
+    { pts: 180, stat: '의상 수집 공격력', val: 1, unit: '%' },
+    { pts: 220, stat: '골드 획득량', val: 1, unit: '%' },
+    { pts: 260, stat: '의상 수집 생명력', val: 5, unit: '%' },
+    { pts: 300, stat: '경험치 획득량', val: 1, unit: '%' },
+    { pts: 340, stat: '의상 수집 방어력', val: 10, unit: '%' },
+    { pts: 380, stat: '아이템 드랍 확률', val: 1, unit: '%' },
+    { pts: 420, stat: '의상 수집 관통력', val: 10, unit: '%' },
+    { pts: 460, stat: '식재료 드랍 확률', val: 1, unit: '%' },
+    { pts: 500, stat: '스킬 데미지 증가', val: 10, unit: '%' },
+    { pts: 540, stat: '평타 데미지 증가', val: 10, unit: '%' },
+    { pts: 580, stat: '의상 수집 공격력', val: 70, unit: '%' },
+    { pts: 620, stat: '골드 획득량', val: 2, unit: '%' },
+    { pts: 660, stat: '의상 수집 생명력', val: 10, unit: '%' },
+    { pts: 700, stat: '경험치 획득량', val: 2, unit: '%' },
+    { pts: 740, stat: '의상 수집 방어력', val: 40, unit: '%' },
+    { pts: 780, stat: '아이템 드랍 확률', val: 2, unit: '%' },
+    { pts: 820, stat: '의상 수집 관통력', val: 40, unit: '%' },
+    { pts: 860, stat: '식재료 드랍 확률', val: 2, unit: '%' },
+    { pts: 900, stat: '스킬 데미지 증가', val: 20, unit: '%' },
+    { pts: 940, stat: '평타 데미지 증가', val: 20, unit: '%' },
+    { pts: 980, stat: '의상 수집 공격력', val: 20, unit: '%' },
+    { pts: 1020, stat: '골드 획득량', val: 2, unit: '%' },
+    { pts: 1060, stat: '의상 수집 생명력', val: 10, unit: '%' },
+    { pts: 1100, stat: '경험치 획득량', val: 2, unit: '%' },
+    { pts: 1140, stat: '의상 수집 방어력', val: 40, unit: '%' },
+    { pts: 1180, stat: '아이템 드랍 확률', val: 2, unit: '%' },
+    { pts: 1220, stat: '의상 수집 관통력', val: 40, unit: '%' },
+    { pts: 1260, stat: '식재료 드랍 확률', val: 2, unit: '%' },
+    { pts: 1300, stat: '스킬 데미지 증가', val: 20, unit: '%' },
+    { pts: 1340, stat: '평타 데미지 증가', val: 20, unit: '%' },
+    { pts: 1380, stat: '의상 수집 공격력', val: 30, unit: '%' },
+    { pts: 1420, stat: '골드 획득량', val: 3, unit: '%' },
+    { pts: 1460, stat: '의상 수집 생명력', val: 15, unit: '%' },
+    { pts: 1500, stat: '경험치 획득량', val: 3, unit: '%' },
+    { pts: 1540, stat: '의상 수집 방어력', val: 90, unit: '%' },
+    { pts: 1580, stat: '아이템 드랍 확률', val: 3, unit: '%' },
+    { pts: 1620, stat: '의상 수집 관통력', val: 90, unit: '%' },
+    { pts: 1660, stat: '식재료 드랍 확률', val: 3, unit: '%' },
+    { pts: 1700, stat: '스킬 데미지 증가', val: 30, unit: '%' },
+    { pts: 1740, stat: '평타 데미지 증가', val: 30, unit: '%' },
+    { pts: 1780, stat: '의상 수집 공격력', val: 50, unit: '%' },
+    { pts: 1820, stat: '골드 획득량', val: 5, unit: '%' },
+    { pts: 1860, stat: '의상 수집 생명력', val: 25, unit: '%' },
+    { pts: 1900, stat: '경험치 획득량', val: 5, unit: '%' },
+    { pts: 1940, stat: '의상 수집 방어력', val: 250, unit: '%' },
+    { pts: 1980, stat: '아이템 드랍 확률', val: 5, unit: '%' },
+    { pts: 2020, stat: '의상 수집 관통력', val: 250, unit: '%' }
+    // 이후 구간 데이터도 포인트 도달 시 자동으로 합산 확장 가능
+  ];
+
+  function renderCostumeSections() {
+    const container = document.getElementById('costume-sections-container');
+    if (!container) return;
+
+    let html = '';
+
+    // 1. 장비 등급별 섹션 렌더링
+    equipmentCostumeData.forEach(eq => {
+      html += `
+        <div class="invest-card" style="margin-bottom: 12px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 14px; color: ${eq.color};">⚔️ 장비 ${eq.grade}등급 (개당 ${eq.pts} P)</span>
+            <div>
+              <button onclick="toggleCostumeGroup('eq-${eq.grade}', true)" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer;">전체선택</button>
+              <button onclick="toggleCostumeGroup('eq-${eq.grade}', false)" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer;">전체해제</button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px;">
+      `;
+
+      eq.parts.forEach(part => {
+        eq.tiers.forEach(tier => {
+          const chkId = `chk-eq-${eq.grade}-${part}-${tier}`;
+          html += `
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;">
+              <input type="checkbox" id="${chkId}" class="costume-chk group-eq-${eq.grade}" data-pts="${eq.pts}" onchange="updateCostumeCalculations(); handleInput();" style="width: 16px; height: 16px; cursor: pointer;">
+              <span style="font-weight: 600;">${part} ${tier}</span>
+            </label>
+          `;
+        });
+      });
+
+      html += `</div></div>`;
+    });
+
+    // 2. 코스튬 특수 섹션 렌더링 (A등급 4종, SSS등급 11종)
+    costumeSpecialData.forEach(cs => {
+      html += `
+        <div class="invest-card" style="margin-bottom: 12px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 14px; color: ${cs.color};">👗 ${cs.name} (종류별 ${cs.count}개 / 부위당 ${cs.pts} P)</span>
+            <div>
+              <button onclick="toggleCostumeGroup('${cs.idPrefix}', true)" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer;">전체선택</button>
+              <button onclick="toggleCostumeGroup('${cs.idPrefix}', false)" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer;">전체해제</button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px;">
+      `;
+
+      costumeParts.forEach(part => {
+        for (let i = 1; i <= cs.count; i++) {
+          const chkId = `chk-${cs.idPrefix}-${part}-${i}`;
+          html += `
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;">
+              <input type="checkbox" id="${chkId}" class="costume-chk group-${cs.idPrefix}" data-pts="${cs.pts}" onchange="updateCostumeCalculations(); handleInput();" style="width: 16px; height: 16px; cursor: pointer;">
+              <span style="font-weight: 600;">${part} #${i}</span>
+            </label>
+          `;
+        }
+      });
+
+      html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function toggleCostumeGroup(groupClass, checked) {
+    document.querySelectorAll(`.group-${groupClass}`).forEach(chk => {
+      chk.checked = checked;
+    });
+    updateCostumeCalculations();
+    handleInput();
+  }
+
+  function toggleAllCostumes(checked) {
+    document.querySelectorAll('.costume-chk').forEach(chk => {
+      chk.checked = checked;
+    });
+    updateCostumeCalculations();
+    handleInput();
+  }
+
+  function updateCostumeCalculations() {
+    let totalPts = 0;
+    document.querySelectorAll('.costume-chk').forEach(chk => {
+      if (chk.checked) {
+        totalPts += Number(chk.getAttribute('data-pts')) || 0;
+      }
+    });
+
+    const ptsEl = document.getElementById('costume-total-pts');
+    if (ptsEl) ptsEl.innerText = `${toCommaStr(totalPts)} P`;
+
+    // 활성화된 누적 능력치 합산 계산
+    let accumulatedStats = {};
+    costumeMilestonesTable.forEach(ms => {
+      if (totalPts >= ms.pts) {
+        accumulatedStats[ms.stat] = (accumulatedStats[ms.stat] || 0) + ms.val;
+      }
+    });
+
+    const statsListEl = document.getElementById('costume-total-stats-list');
+    const statKeys = Object.keys(accumulatedStats);
+
+    if (statKeys.length === 0) {
+      if (statsListEl) statsListEl.innerHTML = `<span style="font-size: 11px; color: #94a3b8;">포인트를 획득하여 능력치를 활성화하세요. (최소 180 P 필요)</span>`;
+    } else {
+      if (statsListEl) {
+        statsListEl.innerHTML = statKeys.map(statName => `
+          <span class="item-badge" style="background: #1e293b; color: white; border-color: #334155;">
+            ${statName} +${toCommaStr(accumulatedStats[statName])}%
+          </span>
+        `).join('');
+      }
+    }
+  }
+    
     // [찾을 위치] <script> 태그 내부의 하단 함수들 근처에 아래 함수들을 추가해 주세요.
     // ===== 길드 어빌리티 관련 신규 데이터 (해금, 확률, 수치 도감, 경험치) =====
     const gaStatGroups = {
