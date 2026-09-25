@@ -4688,24 +4688,27 @@ function renderCostumeSections() {
         }, 200);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      renderGoldStats();
-      renderLevelStats();
-      renderMissions();
-      renderSummonStats();
+document.addEventListener('DOMContentLoaded', () => {
+    renderGoldStats();
+    renderLevelStats();
+    renderMissions();
+    renderSummonStats();
+    renderCostumeSections(); // 👈 [추가 1] 의상 섹션 렌더링 함수 호출
+
+    renderGuildDailyActivities();
+    renderGuildMissions();
+    renderGuildShopItems();
+
+    initGuildAbilityUI(); // // 신규 추가 (어빌리티 초기화)
+
+    loadSavedData();
+    updateCostumeCalculations(); // 👈 [추가 2] 저장된 데이터 불러온 뒤 의상 계산 업데이트 호출
     
-      renderGuildDailyActivities();
-      renderGuildMissions();
-      renderGuildShopItems();
-    
-      initGuildAbilityUI(); // 신규 추가 (어빌리티 초기화)
-    
-      loadSavedData();
-      calcGuildLevelInfo();
-      calcGuildAbilityExp();
-      calcGuildShopTotal();
-      updateAllGuildCalculations();
-    });
-  </script>
+    calcGuildLevelInfo();
+    calcGuildAbilityExp();
+    calcGuildShopTotal();
+    updateAllGuildCalculations();
+});
+</script>
 </body>
 </html>
