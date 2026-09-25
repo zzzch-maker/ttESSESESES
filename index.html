@@ -1736,7 +1736,7 @@
     // 이후 구간 데이터도 포인트 도달 시 자동으로 합산 확장 가능
   ];
 
-  function renderCostumeSections() {
+function renderCostumeSections() {
     const container = document.getElementById('costume-sections-container');
     if (!container) return;
 
@@ -1756,8 +1756,9 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px;">
       `;
 
-      eq.parts.forEach(part => {
-        eq.tiers.forEach(tier => {
+      // 💡 수정됨: eq.parts, eq.tiers 대신 전역 상단에 선언된 costumeParts, costumeTiers를 참조하도록 변경
+      costumeParts.forEach(part => {
+        costumeTiers.forEach(tier => {
           const chkId = `chk-eq-${eq.grade}-${part}-${tier}`;
           html += `
             <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;">
